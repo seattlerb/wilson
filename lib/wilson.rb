@@ -33,7 +33,7 @@ class Module
   @@asm = []
 
   def defasm name, *args, &block
-    asm = Metal::MachineCodeX86.new
+    asm = Wilson::MachineCodeX86.new
 
     asm.ebp.push
     # asm.esi.push # TODO?
@@ -80,7 +80,7 @@ end
 
 class Integer
   def m
-    address = Metal::Address.new
+    address = Wilson::Address.new
     address.offset = self
     address
   end
@@ -108,7 +108,7 @@ class Array
   end
 end
 
-module Metal
+module Wilson
   VERSION = '1.0.0'
 
   ##
@@ -1180,7 +1180,7 @@ module Metal
 
   class SegmentRegister < SpecialRegister
   end
-end # module Metal
+end # module Wilson
 
 __END__
 

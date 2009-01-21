@@ -1,12 +1,12 @@
 
 require 'test/unit'
-require 'metal'
+require 'wilson'
 
-class TestMetal < Test::Unit::TestCase
+class TestWilson < Test::Unit::TestCase
   # MachineCodeX86Test initialize-release
 
   def setup
-    @asm = Metal::MachineCodeX86.new
+    @asm = Wilson::MachineCodeX86.new
     @stream = asm.stream
   end
 

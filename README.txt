@@ -4,7 +4,7 @@
 
 == DESCRIPTION:
 
-Worst Idea Evar. Wilson is a pure ruby x86 assembler. No, really.
+Wilson is a pure ruby x86 assembler. No, really. Worst Idea Evar.
 
 Why "wilson"? I wanted to name it "metal", but there is an existing
 project with that name... So I'm naming it after Wilson Bilkovich, who

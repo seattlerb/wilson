@@ -2,6 +2,5 @@ History.txt
 Manifest.txt
 README.txt
 Rakefile
-bin/asm
-lib/asm.rb
-test/test_asm.rb
+lib/wilson.rb
+test/test_wilson.rb

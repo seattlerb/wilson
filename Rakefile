@@ -2,9 +2,9 @@
 
 require 'rubygems'
 require 'hoe'
-require './lib/metal.rb'
+require './lib/wilson.rb'
 
-h=Hoe.new('metal', Metal::VERSION) do |p|
+h=Hoe.new('wilson', Wilson::VERSION) do |p|
   p.rubyforge_name = 'seattlerb'
   p.developer('Ryan Davis', 'ryand-ruby@zenspider.com')
 end
@@ -42,7 +42,6 @@ end
 #
 #   send msg, cmd
 # end
-
 
 namespace :test do
   desc "profiles your tests"

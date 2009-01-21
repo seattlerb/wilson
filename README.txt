@@ -18,10 +18,13 @@ is about as metal as you can get (and it is easier to spell than
 
 == SYNOPSIS:
 
-  defasm :three_plus_four do
-    eax.mov 3
-    eax.add 4
+  class X
+    defasm :superfast_meaning_of_life do
+      eax.mov 42.r                  # (42 << 1) + 1
+    end
   end
+  
+  p X.new.superfast_meaning_of_life # => 42
 
 == REQUIREMENTS:
 
@@ -29,7 +32,7 @@ is about as metal as you can get (and it is easier to spell than
 
 == INSTALL:
 
-* sudo gem install metal
+* sudo gem install wilson
 
 == LICENSE:
 

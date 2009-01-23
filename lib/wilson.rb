@@ -581,7 +581,7 @@ module Wilson
   ##
   # MachineCode is an abstract machine that has subclasses for each
   # concrete machine type that you can write assembly language for.
-  # Right now this library only supports X86, so loko at
+  # Right now this library only supports X86, so look at
   # MachineCodeX86 for more details on how to use it.
 
   class MachineCode

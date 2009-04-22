@@ -1,3 +1,14 @@
+=== 1.0.1 / 2009-04-22
+
+* 3 minor enhancements:
+
+  * Added bench.rb to demonstrate timings.
+  * Added example.rb.
+
+* 1 bug fix:
+
+  * Fixed defasm to work much better.
+
 === 1.0.0 / 2009-01-20
 
 * 1 major enhancement

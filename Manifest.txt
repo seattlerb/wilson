@@ -2,5 +2,7 @@ History.txt
 Manifest.txt
 README.txt
 Rakefile
+bench.rb
+example.rb
 lib/wilson.rb
 test/test_wilson.rb

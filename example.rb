@@ -4,35 +4,31 @@ require 'test/unit'
 $: << 'lib'
 require 'wilson'
 
-class Wilson::MachineCodeX86
-  def to_ruby reg
-    self.ebx.mov reg
-    self.imul reg, 2
-    reg.inc
-  end
-end
-
 class Examples
   defasm :count_to_ten do
-    # eax.mov 0
-    # ecx.mov 10
-    # count = self.label
-    # eax.add 1
-    # count.loop
+    eax.mov 0
+    ecx.mov 10
+    count = self.label
+    eax.add 1
+    count.loop
+
+    to_ruby eax
   end
 
   defasm :three_plus_four do
     eax.mov 3
     eax.add 4
-    # to_ruby eax
+
+    # convert machine fixnum to ruby fixnum. aka: ((x << 1) + 1)
+    to_ruby eax
   end
 
   defasm :jump_forward do
-    # future = self.future_label
-    # eax.xor eax
-    # future.jmp
-    # eax.inc
-    # future.plant
+    future = self.future_label
+    eax.xor eax
+    future.jmp
+    eax.inc
+    future.plant
   end
 
   defasm :first_in_array, :array do
@@ -61,6 +57,7 @@ end
 
 class TestExamples < Test::Unit::TestCase
   def setup
+    warn name
     @x = Examples.new
   end
 
@@ -73,11 +70,21 @@ class TestExamples < Test::Unit::TestCase
   end
 
   def test_jump_forward
-    # assert_equal false, @x.jump_forward
+    assert_equal false, @x.jump_forward
+  end
+
+  def test_three_plus_four_again_again
+    assert_equal 7, @x.three_plus_four
+  end
+
+  def test_jump_forward_again
+    assert_equal false, @x.jump_forward
   end
 
   def test_count_to_ten
-    # assert_equal 10, @x.count_to_ten
+    expect = 10
+    actual = @x.count_to_ten
+    assert_equal expect, actual #
   end
 
   def test_add
@@ -90,9 +97,9 @@ class TestExamples < Test::Unit::TestCase
   end
 
   def test_sum
-    #     | array |
-    #     array = #[ 5 6 7 8 9 100 ] gc_copy_to_heap
-    #     self assert: (Sum call_with: array with: 5) = 35
+    # | array |
+    # array = #[ 5 6 7 8 9 100 ] gc_copy_to_heap
+    # self assert: (Sum call_with: array with: 5) = 35
   end
 end
 

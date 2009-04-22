@@ -29,16 +29,17 @@ class Integer
   end
 end
 
-class Module
-  @@asm = []
+ASM = []
 
+class Module
   def defasm name, *args, &block
     asm = Wilson::MachineCodeX86.new
 
     asm.ebp.push
-    # asm.esi.push # TODO?
-    # asm.edi.push
     asm.ebp.mov asm.esp
+
+    asm.esi.push
+    asm.edi.push
 
     size = asm.stream.size
 
@@ -49,17 +50,30 @@ class Module
       asm.eax.mov 4
     end
 
-    # asm.edi.pop
-    # asm.esi.pop
-    # asm.ebp.pop
+    asm.edi.pop
+    asm.esi.pop
 
     asm.leave
     asm.ret
 
     code = asm.stream.pack("C*")
-    @@asm << code
 
-    Ruby.rb_define_method self, name.to_s, code, 0
+    if $DEBUG then
+      path = "#{name}.obj"
+      File.open path, "wb" do |f|
+        f.write code
+      end
+
+      p name
+      puts code.unpack("C*").map { |n| "%02X" % n }.join(' ')
+      system "ndisasm -u #{path}"
+
+      File.unlink path
+    end
+
+    ptr  = code.to_ptr
+    ASM << ptr
+    Ruby.rb_define_method self, name.to_s, ptr, 0
   end
 end
 
@@ -109,7 +123,7 @@ class Array
 end
 
 module Wilson
-  VERSION = '1.0.0'
+  VERSION = '1.0.1'
 
   ##
   # Assembler parses the NASM documentation and creates Command
@@ -847,6 +861,11 @@ module Wilson
       self.ebp = Register.on_id_bits self, 5, 32
       self.esi = Register.on_id_bits self, 6, 32
       self.edi = Register.on_id_bits self, 7, 32
+    end
+
+    def to_ruby reg
+      reg.add reg
+      reg.inc
     end
   end
 

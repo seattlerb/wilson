@@ -2,14 +2,31 @@
 
 # % rm -r ~/.ruby_inline; ./bench.rb 1_000_000 1_000
 # # of iterations = 1000000
+# $n = 1000
+#
 #                           user     system      total        real
-# null_time             0.130000   0.000000   0.130000 (  0.123534)
-# c-nil                 0.280000   0.000000   0.280000 (  0.284030)
-# asm-nil               0.270000   0.000000   0.270000 (  0.278700)
-# c                     0.830000   0.010000   0.840000 (  0.841285)
-# asm2                  0.840000   0.000000   0.840000 (  0.842834)
-# asm                   3.510000   0.010000   3.520000 (  3.543986)
-# ruby                 89.790000   0.200000  89.990000 ( 90.653678)
+# null_time             0.120000   0.000000   0.120000 (  0.122507)
+# cee_nil               0.280000   0.000000   0.280000 (  0.279552)
+# asm_nil               0.280000   0.000000   0.280000 (  0.275498)
+# ruby_nil              0.370000   0.000000   0.370000 (  0.372142)
+# cee                   0.830000   0.010000   0.840000 (  0.837607)
+# asm2                  0.830000   0.000000   0.830000 (  0.839430)
+# asm                   3.520000   0.000000   3.520000 (  3.542521)
+# ruby                 98.970000   0.430000  99.400000 (101.903256)
+#
+# % rm -r ~/.ruby_inline; ./bench.rb 10_000_000 100
+# # of iterations = 10000000
+# $n = 100
+#
+#                           user     system      total        real
+# null_time             1.220000   0.000000   1.220000 (  1.243087)
+# cee_nil               2.780000   0.010000   2.790000 (  2.825447)
+# asm_nil               2.760000   0.010000   2.770000 (  2.770936)
+# ruby_nil              3.710000   0.000000   3.710000 (  3.735188)
+# cee                   3.560000   0.010000   3.570000 (  3.581262)
+# asm2                  3.450000   0.010000   3.460000 (  3.481769)
+# asm                   5.990000   0.010000   6.000000 (  6.042270)
+# ruby                 95.460000   0.300000  95.760000 ( 96.578792)
 
 $: << 'lib'
 require 'wilson'
@@ -18,96 +35,74 @@ require 'inline'
 require 'benchmark'
 
 max = (ARGV.shift || 10_000_000).to_i
-$n  = (ARGV.shift || 10).to_i
+n   = (ARGV.shift || 100).to_i
 
 class Counter
   inline do |builder|
     builder.c "VALUE cee_nil() { return Qnil;}"
-    builder.c "long cee() { long i; for (i = 0;i<#{$n};i++) {}; return i;}"
+    builder.c "long cee(int n) { long i; for (i = 0;i<n+1;i++) {}; return i;}"
   end
-
-  # 00000f7a  pushl %ebp
-  # 00000f7b  xorl  %eax,%eax
-  # 00000f7d  movl  %esp,%ebp
-  # 00000f7f  incl  %eax
-  # 00000f80  cmpl  $0x000003e8,%eax
-  # 00000f85  jne 0x00000f7f
-  # 00000f87  leave
-  # 00000f88  movw  $0x07d1,%ax
-  # 00000f8c  ret
 
   defasm :asm_nil do
     eax.mov 4
   end
 
-  defasm :asm do
-    eax.mov 0
-    ecx.mov $n
+  defasm :asm, :n do # naive version
+    eax.xor eax
+
+    ecx.mov arg(0)
+    from_ruby ecx
+    ecx.inc
+
     count = self.label
-    eax.add 1
+    eax.inc
     count.loop
 
-    eax.add eax # fixnum: n + n + 1
-    eax.inc
+    to_ruby eax
   end
 
-  # 00000000  55                push ebp
-  # 00000001  89E5              mov ebp,esp
-  # 00000003  56                push esi
-  # 00000004  57                push edi
-  # 00000005  B800000000        mov eax,0x0
-  # 0000000A  B910270000        mov ecx,0x2710
-  # 0000000F  83C001            add eax,byte +0x1
-  # 00000012  E2FB              loop 0xf
-  # 00000014  01C0              add eax,eax
-  # 00000016  40                inc eax
-  # 00000017  5F                pop edi
-  # 00000018  5E                pop esi
-  # 00000019  C9                leave
-  # 0000001A  C3                ret
+  defasm :asm2, :n do
+    eax.xor eax
 
-  defasm :asm2 do
-    eax.mov 0
+    edx.mov arg(0)
+    from_ruby edx
+    edx.inc
+
     count = self.label
     eax.inc
-    eax.cmp $n
-    jne count
+    eax.cmp edx
+    jnz count
 
-    eax.add eax # fixnum: n + n + 1
-    eax.inc
+    to_ruby eax
   end
-
-  # 00000000  55                push ebp
-  # 00000001  89E5              mov ebp,esp
-  # 00000003  B800000000        mov eax,0x0
-  # 00000008  40                inc eax
-  # 00000009  3DE8030000        cmp eax,0x3e8
-  # 0000000E  75F8              jnz 0x8
-  # 00000010  01C0              add eax,eax
-  # 00000012  40                inc eax
-  # 00000013  C9                leave
-  # 00000014  C3                ret
 
   def ruby_nil
     nil
   end
 
-  def ruby
-    $n.times do; end
+  def ruby n
+    (n+1).times do; end
   end
 end
 
 counter = Counter.new
 
-raise "bad c_nil"   unless counter.cee_nil.nil?
-raise "bad asm_nil" unless counter.asm_nil.nil?
-raise "bad c"       unless counter.cee  == $n
-raise "bad asm2"    unless counter.asm2 == $n
-raise "bad asm"     unless counter.asm  == $n
-raise "bad ruby"    unless counter.ruby == $n
+%w(cee_nil asm_nil ruby_nil).each do |name|
+  eval "abort 'bad #{name}' unless counter.#{name}.nil? "
+end
+
+%w(cee asm2 asm ruby).each do |name|
+  eval "
+    x = counter.#{name}(n)
+    warn \"%5s = %4d\" % [name, x] if $DEBUG
+    abort 'bad #{name}' unless x == n + 1
+  "
+end
+
+exit 0 if $DEBUG
 
 puts "# of iterations = #{max}"
-puts "$n = #{$n}"
+puts "n = #{n}"
 puts
 Benchmark::bm(20) do |x|
   x.report("null_time") do
@@ -116,11 +111,23 @@ Benchmark::bm(20) do |x|
     end
   end
 
-  %w(cee_nil asm_nil ruby_nil cee asm2 asm ruby).each do |name|
+  %w(cee_nil asm_nil ruby_nil).each do |name|
     eval "
       x.report(#{name.inspect}) do
         for i in 0..max do
           counter.#{name}
+        end
+      end
+    "
+  end
+
+  funcs = %w(cee asm2 asm)
+  funcs << 'ruby' if ENV['PAIN']
+  funcs.each do |name|
+    eval "
+      x.report(#{name.inspect}) do
+        for i in 0..max do
+          counter.#{name}(n)
         end
       end
     "

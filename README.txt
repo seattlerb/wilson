@@ -13,18 +13,35 @@ is about as metal as you can get (and it is easier to spell than
 
 == FEATURES/PROBLEMS:
 
-* Generates x86 machine code directly, with no dependencies.
-* Still has problems with jumps, I need smart ppl to help me.
+* Generates x86 machine code directly. No dependencies. No system calls.
+* Registers ruby methods with #defasm, or run inline assembly with #asm.
+* Terrible, yet, awesome.
 
 == SYNOPSIS:
 
   class X
     defasm :superfast_meaning_of_life do
-      eax.mov 42.r                  # (42 << 1) + 1
+      eax.mov 42
+      to_ruby eax # ruby fixnums = (n << 1) + 1
+    end
+
+    def inline_asm_example
+      n = 1000
+  
+      asm :count_to_n do
+        eax.xor eax
+        count = self.label
+        eax.inc
+        eax.cmp n
+        jne count
+  
+        to_ruby eax
+      end
     end
   end
   
   p X.new.superfast_meaning_of_life # => 42
+  p X.new.inline_asm_example        # => 1000
 
 == REQUIREMENTS:
 
@@ -38,7 +55,7 @@ is about as metal as you can get (and it is easier to spell than
 
 (The MIT License)
 
-Copyright (c) 2008 Ryan Davis, Seattle.rb
+Copyright (c) 2008-2009 Ryan Davis, Seattle.rb
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

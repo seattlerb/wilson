@@ -19,7 +19,7 @@ class Object
 end
 
 module Wilson
-  VERSION = '1.0.1'
+  VERSION = '1.1.0'
 
   ##
   # Assembler parses the NASM documentation and creates Command
@@ -55,6 +55,8 @@ module Wilson
 
        CMP r/m16,imm8 ; o16 83 /7 ib         [8086]
        CMP r/m32,imm8 ; o32 83 /7 ib         [386]
+       SAR r/m16,1    ; o16 D1 /7            [8086]
+       SAR r/m32,1    ; o32 D1 /7            [386]
       '
     end
 
@@ -162,6 +164,7 @@ module Wilson
       (self.class.nasm + self.class.nasm_fixes).each_line do |line|
         self.process_line line.strip.sub(/^# /, '')
       end
+
       self
     end
   end
@@ -764,6 +767,10 @@ module Wilson
       self.edi = Register.on_id_bits self, 7, 32
     end
 
+    def arg n
+      ebp + (n+3) * 4
+    end
+
     def to_ruby reg
       reg.shl 1
       reg.inc
@@ -1117,10 +1124,6 @@ module Ruby
 end
 
 class Integer
-  def thingies
-    self * 4
-  end
-
   def m
     address = Wilson::Address.new
     address.offset = self
@@ -4239,10 +4242,10 @@ __END__
 # SAR r/m8,1                    ; D0 /0                [8086]
 # SAR r/m8,CL                   ; D2 /0                [8086]
 # SAR r/m8,imm8                 ; C0 /0 ib             [286]
-# SAR r/m16,1                   ; o16 D1 /0            [8086]
+# xxSAR r/m16,1                   ; o16 D1 /0            [8086]
 # SAR r/m16,CL                  ; o16 D3 /0            [8086]
 # SAR r/m16,imm8                ; o16 C1 /0 ib         [286]
-# SAR r/m32,1                   ; o32 D1 /0            [386]
+# xxSAR r/m32,1                   ; o32 D1 /0            [386]
 # SAR r/m32,CL                  ; o32 D3 /0            [386]
 # SAR r/m32,imm8                ; o32 C1 /0 ib         [386]
 

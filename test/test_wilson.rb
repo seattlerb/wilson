@@ -29,12 +29,12 @@ class TestWilson < Test::Unit::TestCase
   attr_reader :asm, :stream
 
   defasm :passthrough, :n do
-    eax.mov ebp + 3.thingies # add n as-is
+    eax.mov arg(0) # add n as-is
   end
 
   defasm :add_to_n, :n do
-    eax.mov ebp + 3.thingies # set eax to n
-    eax.add 2                # increment ruby fixnum directly
+    eax.mov arg(0) # set eax to n
+    eax.add 2      # increment ruby fixnum directly
   end
 
   def test_wtf_inline!

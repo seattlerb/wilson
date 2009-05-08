@@ -1,3 +1,24 @@
+=== 1.1.0 / 2009-05-08
+
+* 1 major enhancement:
+
+  * Added Object#asm for inline assembly. 100% ruby, no C.
+
+* 7 minor enhancements:
+
+  * Added arg(n) for cleanly accessing ruby arguments.
+  * Added debugging output if $DEBUG.
+  * Added defasm and asm test cases.
+  * Added from_ruby and sped up to_ruby a teeny amount.
+  * Improved benchmark code
+  * Refactored ASM DSL to Object#assemble.
+  * Sped up tests a fair amount by optimizing supportsProcessor.
+
+* 2 bug fixes:
+
+  * Found a bug in the nasm manual that wilson parses. Fixed SAR.
+  * Found a bug in the nasm manual that wilson parses. Fixed cmp.
+
 === 1.0.1 / 2009-04-22
 
 * 3 minor enhancements:

@@ -2,6 +2,22 @@
 require 'test/unit'
 require 'wilson'
 
+class X
+  def counter
+    n = 1000
+
+    asm :count_to_n do
+      eax.mov 0
+      count = self.label
+      eax.inc
+      eax.cmp n
+      jne count
+
+      to_ruby eax
+    end
+  end
+end
+
 class TestWilson < Test::Unit::TestCase
   # MachineCodeX86Test initialize-release
 
@@ -11,6 +27,27 @@ class TestWilson < Test::Unit::TestCase
   end
 
   attr_reader :asm, :stream
+
+  defasm :passthrough, :n do
+    eax.mov ebp + 3.thingies # add n as-is
+  end
+
+  defasm :add_to_n, :n do
+    eax.mov ebp + 3.thingies # set eax to n
+    eax.add 2                # increment ruby fixnum directly
+  end
+
+  def test_wtf_inline!
+    assert_equal 1000, X.new.counter
+  end
+
+  def test_wtf1?
+    assert_equal 42, add_to_n(41)
+  end
+
+  def test_wtf2?
+    assert_equal 42, passthrough(42)
+  end
 
   # MachineCodeX86Test testing ow/od
 

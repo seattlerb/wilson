@@ -3,80 +3,6 @@
 require 'dl'
 require 'dl/import'
 
-module Ruby
-  extend DL::Importable
-
-  typealias "VALUE", "unsigned long", proc { |v| v.object_id << 1 }
-
-  dlload "libruby.dylib"
-
-  extern "void rb_define_method(VALUE, char*, void*, int)"
-end
-
-class Object
-  def r
-    self.object_id
-  end
-end
-
-class Integer
-  def r
-    (self.object_id << 1) + 1
-  end
-
-  def inspect
-    "0x#{to_s 16}"
-  end
-end
-
-ASM = []
-
-class Module
-  def defasm name, *args, &block
-    asm = Wilson::MachineCodeX86.new
-
-    asm.ebp.push
-    asm.ebp.mov asm.esp
-
-    asm.esi.push
-    asm.edi.push
-
-    size = asm.stream.size
-
-    asm.instance_eval(&block)
-
-    if asm.stream.size == size  # return nil
-      warn "returning nil for #{self}##{name}"
-      asm.eax.mov 4
-    end
-
-    asm.edi.pop
-    asm.esi.pop
-
-    asm.leave
-    asm.ret
-
-    code = asm.stream.pack("C*")
-
-    if $DEBUG then
-      path = "#{name}.obj"
-      File.open path, "wb" do |f|
-        f.write code
-      end
-
-      p name
-      puts code.unpack("C*").map { |n| "%02X" % n }.join(' ')
-      system "ndisasm -u #{path}"
-
-      File.unlink path
-    end
-
-    ptr  = code.to_ptr
-    ASM << ptr
-    Ruby.rb_define_method self, name.to_s, ptr, 0
-  end
-end
-
 class Object
   def subclass_responsibility; raise "subclass responsibility" end
   def no!; false end
@@ -90,36 +16,6 @@ class Object
   alias :operand?          :no!
   alias :register?         :no!
   alias :special_register? :no!
-end
-
-class Integer
-  def m
-    address = Wilson::Address.new
-    address.offset = self
-    address
-  end
-
-  def immediate_value?
-    true
-  end
-end
-
-class Array
-  def second
-    self[1]
-  end
-
-  def push_D integer
-    self.push(*[integer].pack("V").unpack("C4"))
-  end
-
-  def push_B integer
-    self << (integer & 255)
-  end
-
-  def push_W integer
-    self.push((integer & 255), (integer >> 8 & 255))
-  end
 end
 
 module Wilson
@@ -156,6 +52,9 @@ module Wilson
        FMULTO fpureg  ; DC C8+r              [8086,FPU]
        FSUBTO fpureg  ; DC E8+r              [8086,FPU]
        FSUBRTO fpureg ; DC E0+r              [8086,FPU]
+
+       CMP r/m16,imm8 ; o16 83 /7 ib         [8086]
+       CMP r/m32,imm8 ; o32 83 /7 ib         [386]
       '
     end
 
@@ -622,13 +521,15 @@ module Wilson
     end
 
     def supportsProcessor instructionProcessors
-      processors.any? { |e| instructionProcessors.include? e }
+      # TODO: can still be improved. hashes, caching... something
+      ! (processors & instructionProcessors).empty?
     end
 
     def instructions
       self.cachedInstructions ||= @instructions.select { |e|
         self.supportsProcessor e.processors
       }
+      self.cachedInstructions
     end
 
     def method_missing msg, *args
@@ -864,8 +765,12 @@ module Wilson
     end
 
     def to_ruby reg
-      reg.add reg
+      reg.shl 1
       reg.inc
+    end
+
+    def from_ruby reg
+      reg.shr 1
     end
   end
 
@@ -1200,6 +1105,118 @@ module Wilson
   class SegmentRegister < SpecialRegister
   end
 end # module Wilson
+
+module Ruby
+  extend DL::Importable
+
+  typealias "VALUE", "unsigned long", proc { |v| v.object_id << 1 }
+
+  dlload "libruby.dylib"
+
+  extern "void rb_define_method(VALUE, char*, void*, int)"
+end
+
+class Integer
+  def thingies
+    self * 4
+  end
+
+  def m
+    address = Wilson::Address.new
+    address.offset = self
+    address
+  end
+
+  def immediate_value?
+    true
+  end
+
+  def inspect
+    "0x#{to_s 16}"
+  end if $DEBUG
+end
+
+class Array
+  def second
+    self[1]
+  end
+
+  def push_D integer
+    self.push(*[integer].pack("V").unpack("C4"))
+  end
+
+  def push_B integer
+    self << (integer & 255)
+  end
+
+  def push_W integer
+    self.push((integer & 255), (integer >> 8 & 255))
+  end
+end
+
+ASM = []
+
+class Module
+  def defasm name, *args, &block
+    code = assemble(args.size, &block)
+    ptr  = code.to_ptr
+
+    ASM << ptr
+    Ruby.rb_define_method self, name.to_s, ptr, args.size
+  end
+end
+
+class Object
+  def assemble arg_count = 0, &block
+    asm = Wilson::MachineCodeX86.new
+
+    # TODO: enter?
+    asm.ebp.push
+    asm.ebp.mov asm.esp
+
+    size = asm.stream.size
+
+    asm.instance_eval(&block)
+
+    if asm.stream.size == size  # return nil
+      warn "returning nil for #{self}##{name}"
+      asm.eax.mov 4
+    end
+
+    asm.leave
+    asm.ret
+
+    code = asm.stream.pack("C*")
+
+    if $DEBUG then
+      path = "#{$$}.obj"
+      File.open path, "wb" do |f|
+        f.write code
+      end
+
+      puts code.unpack("C*").map { |n| "%02X" % n }.join(' ')
+      system "ndisasm -u #{path}"
+
+      File.unlink path
+    end
+
+    code
+  end
+
+  @@asm = {}
+  def asm(name, *args, &block)
+    code = @@asm[name] ||= assemble(&block).to_ptr
+
+    return execute_asm(code) # code is the function pointer, wrapped
+  end
+
+  defasm :execute_asm, :code do
+    eax.mov ebp + 0x0c # grab code
+    eax.mov eax + 0x10 # unwrap function pointer field
+    eax.mov eax.m      # dereference the pointer
+    eax.call           # call the function pointer
+  end
+end
 
 __END__
 
@@ -1861,8 +1878,8 @@ __END__
 # CMP r/m16,imm16               ; o16 81 /0 iw         [8086]
 # CMP r/m32,imm32               ; o32 81 /0 id         [386]
 
-# CMP r/m16,imm8                ; o16 83 /0 ib         [8086]
-# CMP r/m32,imm8                ; o32 83 /0 ib         [386]
+# DEADCMP r/m16,imm8                ; o16 83 /0 ib         [8086]
+# DEADCMP r/m32,imm8                ; o32 83 /0 ib         [386]
 
 # CMP AL,imm8                   ; 3C ib                [8086]
 # CMP AX,imm16                  ; o16 3D iw            [8086]

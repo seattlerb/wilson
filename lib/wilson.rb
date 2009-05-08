@@ -18,6 +18,18 @@ class Object
   alias :special_register? :no!
 end
 
+##
+# Wilson is a pure ruby x86 assembler. No, really. Worst Idea Evar.
+#
+# Why "wilson"? I wanted to name it "metal", but there is an existing
+# project with that name... So I'm naming it after Wilson Bilkovich, who
+# is about as metal as you can get (and it is easier to spell than
+# "bilkovich", even tho that sounds more metal).
+#
+# Wilson is a port (and extension) of the smalltalk x86 assembler by
+# Michael Lucas-Smith. I came across it when he presented it at
+# Smalltalk SuperPowers at OOPSLA 2008.
+
 module Wilson
   VERSION = '1.1.0'
 

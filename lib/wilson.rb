@@ -1125,12 +1125,15 @@ module Wilson
   end
 end # module Wilson
 
+require 'rbconfig'
+
 module Ruby
   extend DL::Importable
 
   typealias "VALUE", "unsigned long", proc { |v| v.object_id << 1 }
 
-  dlload "libruby.dylib"
+  dir = File.join(Config::CONFIG["prefix"], "lib")
+  dlload File.join(dir, "libruby.dylib")
 
   extern "void rb_define_method(VALUE, char*, void*, int)"
 end

@@ -1,5 +1,5 @@
 
-require 'test/unit'
+require 'minitest/autorun'
 require 'wilson'
 
 class X
@@ -18,7 +18,7 @@ class X
   end
 end
 
-class TestWilson < Test::Unit::TestCase
+class TestWilson < MiniTest::Unit::TestCase
   # MachineCodeX86Test initialize-release
 
   def setup

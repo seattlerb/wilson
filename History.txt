@@ -1,3 +1,13 @@
+=== 1.1.1 / 2009-06-23
+
+* 1 minor enhancement:
+
+  * Switched to minitest
+
+* 1 bug fix:
+
+  * Specify full path to dlload to fix use in multiruby
+
 === 1.1.0 / 2009-05-08
 
 * 1 major enhancement:

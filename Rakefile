@@ -3,6 +3,9 @@
 require 'rubygems'
 require 'hoe'
 
+Hoe.add_include_dirs("../../RubyInline/dev/lib",
+                     "../../ZenTest/dev/lib")
+
 Hoe.plugin :seattlerb
 
 h = Hoe.spec 'wilson' do
@@ -10,7 +13,7 @@ h = Hoe.spec 'wilson' do
 
   self.rubyforge_name = 'seattlerb'
 
-  multiruby_skip << '1.9'
+  multiruby_skip << '1.9' << 'trunk'
 end
 
 namespace :test do

@@ -13,7 +13,7 @@ h = Hoe.spec 'wilson' do
 
   self.rubyforge_name = 'seattlerb'
 
-  multiruby_skip << '1.9' << 'trunk'
+  multiruby_skip << '1.9' << 'trunk' << "2.0"
 end
 
 namespace :test do

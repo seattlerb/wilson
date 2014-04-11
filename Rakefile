@@ -11,8 +11,6 @@ Hoe.plugin :seattlerb
 h = Hoe.spec 'wilson' do
   developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
 
-  self.rubyforge_name = 'seattlerb'
-
   multiruby_skip << '1.9' << 'trunk' << "2.0"
 end
 

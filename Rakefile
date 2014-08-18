@@ -11,7 +11,7 @@ Hoe.plugin :seattlerb
 h = Hoe.spec 'wilson' do
   developer 'Ryan Davis', 'ryand-ruby@zenspider.com'
 
-  multiruby_skip << '1.9' << 'trunk' << "2.0"
+  multiruby_skip << '1.9' << 'trunk' << "2."
 end
 
 namespace :test do

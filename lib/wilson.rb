@@ -31,7 +31,7 @@ end
 # Smalltalk SuperPowers at OOPSLA 2008.
 
 module Wilson
-  VERSION = '1.1.1'
+  VERSION = '1.1.2'
 
   ##
   # Assembler parses the NASM documentation and creates Command
